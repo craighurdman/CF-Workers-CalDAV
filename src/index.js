@@ -29,6 +29,19 @@ export default {
         });
       }
 
+      // Public read-only ICS feed (unauthenticated, protected by secret token in URL)
+      const publicFeedMatch = path.match(/^\/feed\/([^\/]+)\/([^\/]+)\.ics$/);
+      if (publicFeedMatch) {
+        const [, token, calendarId] = publicFeedMatch;
+        if (!env.PUBLIC_FEED_TOKEN || token !== env.PUBLIC_FEED_TOKEN) {
+          return new Response('Not Found', { status: 404 });
+        }
+        if (method !== 'GET') {
+          return new Response('Method Not Allowed', { status: 405 });
+        }
+        return handler.handleGetCalendar(request, calendarId);
+      }
+
       // Authentication
       const authResult = auth.authenticate(request);
       if (!authResult.success) {
